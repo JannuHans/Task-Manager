@@ -1,0 +1,21 @@
+{
+  "name": "task-manager",
+  "version": "1.0.0",
+  "description": "Full-stack Task Manager Application",
+  "main": "start.js",
+  "scripts": {
+    "start": "node start.js",
+    "dev": "node start.js",
+    "build": "cd client && npm install && npm run build",
+    "build:server": "cd server && npm install",
+    "install:all": "npm install && cd client && npm install && cd ../server && npm install",
+    "deploy:render": "npm run build:server && npm run build"
+  },
+  "keywords": ["task-manager", "mern", "react", "node", "express", "mongodb"],
+  "author": "",
+  "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  }
+} 
