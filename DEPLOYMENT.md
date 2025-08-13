@@ -1,138 +1,148 @@
-# Task Manager Deployment Guide - Render
+# Task Manager Deployment Guide
 
-This guide will help you deploy the Task Manager application on Render.
+This guide will help you deploy your Task Manager application with the backend on Render and frontend on Vercel.
 
 ## Prerequisites
 
-1. **MongoDB Database**: You'll need a MongoDB database. You can use:
-   - [MongoDB Atlas](https://www.mongodb.com/atlas) (Recommended)
-   - [Render's MongoDB service](https://render.com/docs/databases)
+- GitHub account with your code repository
+- Render account (free tier available)
+- Vercel account (free tier available)
+- MongoDB Atlas account (for database)
+- AWS account (if using S3 for file uploads)
 
-2. **AWS S3 Bucket** (Optional): For file uploads, you'll need an S3 bucket with appropriate permissions.
+## Part 1: Backend Deployment on Render
 
-## Deployment Steps
+### Step 1: Prepare Your Repository
+1. Ensure your code is pushed to GitHub
+2. Make sure your `render.yaml` file is in the root directory
+3. Verify your server dependencies are properly listed in `server/package.json`
 
-### 1. Prepare Your Repository
+### Step 2: Deploy on Render
+1. Go to [render.com](https://render.com) and sign up/login
+2. Click "New +" and select "Web Service"
+3. Connect your GitHub repository
+4. Render will automatically detect the `render.yaml` file
+5. Configure the following environment variables in Render dashboard:
+   - `MONGODB_URI`: Your MongoDB connection string
+   - `JWT_SECRET`: A strong secret key for JWT tokens
+   - `CLIENT_URL`: Your Vercel frontend URL (will be set after frontend deployment)
+   - `AWS_ACCESS_KEY_ID`: Your AWS access key (if using S3)
+   - `AWS_SECRET_ACCESS_KEY`: Your AWS secret key (if using S3)
+   - `AWS_REGION`: Your AWS region (if using S3)
+   - `AWS_BUCKET_NAME`: Your S3 bucket name (if using S3)
 
-Make sure your code is pushed to a Git repository (GitHub, GitLab, etc.).
+### Step 3: Deploy
+1. Click "Create Web Service"
+2. Render will build and deploy your backend
+3. Note down your backend URL (e.g., `https://task-manager-api.onrender.com`)
 
-### 2. Deploy on Render
+## Part 2: Frontend Deployment on Vercel
 
-#### Option A: Using render.yaml (Recommended)
+### Step 1: Prepare Your Repository
+1. Ensure your `vercel.json` file is in the `client` directory
+2. Verify your frontend dependencies are properly listed in `client/package.json`
 
-1. Connect your repository to Render
-2. Render will automatically detect the `render.yaml` file
-3. Configure the following environment variables in Render dashboard:
+### Step 2: Deploy on Vercel
+1. Go to [vercel.com](https://vercel.com) and sign up/login
+2. Click "New Project"
+3. Import your GitHub repository
+4. Configure the project:
+   - **Framework Preset**: Create React App
+   - **Root Directory**: `client`
+   - **Build Command**: `npm run build`
+   - **Output Directory**: `build`
+   - **Install Command**: `npm install`
 
-**For the API Service (`task-manager-api`):**
-- `MONGODB_URI`: Your MongoDB connection string
-- `JWT_SECRET`: A strong secret key for JWT tokens
-- `AWS_ACCESS_KEY_ID`: Your AWS access key (if using S3)
-- `AWS_SECRET_ACCESS_KEY`: Your AWS secret key (if using S3)
-- `AWS_REGION`: Your AWS region (e.g., us-east-1)
-- `AWS_BUCKET_NAME`: Your S3 bucket name (if using S3)
+### Step 3: Set Environment Variables
+1. In your Vercel project dashboard, go to "Settings" → "Environment Variables"
+2. Add the following environment variable:
+   - **Name**: `REACT_APP_API_URL`
+   - **Value**: `https://task-manager-api.onrender.com/api` (your Render backend URL)
+   - **Environment**: Production, Preview, Development
 
-**For the Client Service (`task-manager-client`):**
-- `REACT_APP_API_URL`: Will be automatically set to your API URL
+### Step 4: Deploy
+1. Click "Deploy"
+2. Vercel will build and deploy your frontend
+3. Note down your frontend URL (e.g., `https://your-project.vercel.app`)
 
-#### Option B: Manual Deployment
+## Part 3: Update Backend Configuration
 
-1. **Deploy Backend API:**
-   - Create a new Web Service on Render
-   - Connect your repository
-   - Set the following:
-     - **Build Command**: `cd server && npm install`
-     - **Start Command**: `cd server && npm start`
-     - **Environment**: Node
-   - Add the environment variables listed above
+### Step 1: Update CORS Settings
+After getting your Vercel frontend URL, update the `CLIENT_URL` environment variable in Render:
+1. Go to your Render service dashboard
+2. Navigate to "Environment" tab
+3. Update `CLIENT_URL` with your Vercel frontend URL
+4. Redeploy the service
 
-2. **Deploy Frontend:**
-   - Create a new Static Site on Render
-   - Connect your repository
-   - Set the following:
-     - **Build Command**: `cd client && npm install && npm run build`
-     - **Publish Directory**: `client/build`
-   - Add `REACT_APP_API_URL` environment variable pointing to your API URL
+### Step 2: Verify Backend CORS
+Ensure your backend allows requests from your Vercel domain. Check your `server/server.js` file for CORS configuration.
 
-### 3. Environment Variables Setup
+## Part 4: Testing and Verification
 
-Create a `.env` file in the server directory with the following variables:
+### Step 1: Test Backend
+1. Visit your Render backend URL + `/api/health` (if you have a health endpoint)
+2. Test API endpoints using Postman or similar tool
+3. Verify database connections
 
-```env
-NODE_ENV=production
-PORT=10000
-MONGODB_URI=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret_key
-CLIENT_URL=https://your-client-url.onrender.com
-AWS_ACCESS_KEY_ID=your_aws_access_key
-AWS_SECRET_ACCESS_KEY=your_aws_secret_key
-AWS_REGION=your_aws_region
-AWS_BUCKET_NAME=your_s3_bucket_name
-```
+### Step 2: Test Frontend
+1. Visit your Vercel frontend URL
+2. Test user registration/login
+3. Test task creation and management
+4. Verify API calls are working
 
-### 4. Database Setup
-
-1. Create a MongoDB database
-2. The application will automatically create the necessary collections on first run
-3. Make sure your MongoDB connection string is properly formatted
-
-### 5. Testing Your Deployment
-
-1. **API Health Check**: Visit `https://your-api-url.onrender.com/health`
-2. **Frontend**: Visit your client URL to test the application
-3. **Test Features**: Try creating an account and managing tasks
+### Step 3: Test Integration
+1. Ensure frontend can communicate with backend
+2. Test file uploads (if applicable)
+3. Verify authentication flow
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Build Failures**:
-   - Check that all dependencies are properly listed in package.json
-   - Ensure Node.js version compatibility (>=16.0.0)
+#### Backend Issues
+- **Build Failures**: Check `server/package.json` for missing dependencies
+- **Environment Variables**: Ensure all required env vars are set in Render
+- **Database Connection**: Verify MongoDB URI and network access
 
-2. **Database Connection Issues**:
-   - Verify your MongoDB connection string
-   - Check if your MongoDB instance allows connections from Render's IP ranges
+#### Frontend Issues
+- **Build Failures**: Check `client/package.json` and build logs
+- **API Connection**: Verify `REACT_APP_API_URL` is set correctly
+- **CORS Errors**: Ensure backend allows requests from Vercel domain
 
-3. **CORS Issues**:
-   - Ensure `CLIENT_URL` environment variable is set correctly
-   - Check that the client URL matches your actual frontend URL
+#### General Issues
+- **Environment Variables**: Remember to redeploy after changing env vars
+- **Domain Issues**: Check if your custom domains are properly configured
 
-4. **File Upload Issues**:
-   - Verify AWS S3 credentials and bucket permissions
-   - Check that the S3 bucket exists and is accessible
+## Environment Variables Summary
 
-### Logs and Debugging
+### Backend (Render)
+```
+NODE_ENV=production
+PORT=10000
+MONGODB_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
+CLIENT_URL=https://your-frontend.vercel.app
+AWS_ACCESS_KEY_ID=your_aws_key (if using S3)
+AWS_SECRET_ACCESS_KEY=your_aws_secret (if using S3)
+AWS_REGION=your_aws_region (if using S3)
+AWS_BUCKET_NAME=your_s3_bucket (if using S3)
+```
 
-- Check Render logs in the dashboard for both services
-- Monitor the `/health` endpoint for API status
-- Use browser developer tools to check for frontend errors
+### Frontend (Vercel)
+```
+REACT_APP_API_URL=https://your-backend.onrender.com/api
+```
 
-## Security Considerations
+## Final Notes
 
-1. **Environment Variables**: Never commit sensitive information to your repository
-2. **JWT Secret**: Use a strong, random string for JWT_SECRET
-3. **Database**: Use connection strings with authentication
-4. **CORS**: Ensure CORS is properly configured for production
-
-## Performance Optimization
-
-1. **Database Indexing**: Consider adding indexes to frequently queried fields
-2. **Caching**: Implement Redis caching for better performance
-3. **CDN**: Use a CDN for static assets
-4. **Compression**: Enable gzip compression on your server
-
-## Monitoring
-
-1. Set up monitoring for your API endpoints
-2. Monitor database performance
-3. Set up alerts for downtime
-4. Track application metrics
+- Both Render and Vercel offer free tiers suitable for development and small applications
+- Monitor your usage to stay within free tier limits
+- Set up automatic deployments by connecting your GitHub repository
+- Consider setting up custom domains for production use
+- Regularly update dependencies and monitor security
 
 ## Support
 
-If you encounter issues:
-1. Check Render's documentation
-2. Review application logs
-3. Test locally to isolate issues
-4. Contact Render support if needed 
+- Render Documentation: [docs.render.com](https://docs.render.com)
+- Vercel Documentation: [vercel.com/docs](https://vercel.com/docs)
+- MongoDB Atlas: [docs.atlas.mongodb.com](https://docs.atlas.mongodb.com) 

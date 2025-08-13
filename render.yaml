@@ -4,8 +4,8 @@ services:
     name: task-manager-api
     env: node
     plan: free
-    buildCommand: cd server && npm install
-    startCommand: cd server && npm start
+    buildCommand: npm install
+    startCommand: npm start
     rootDir: server
     envVars:
       - key: NODE_ENV
@@ -17,7 +17,7 @@ services:
       - key: JWT_SECRET
         sync: false
       - key: CLIENT_URL
-        value: https://task-manager-client.onrender.com
+        sync: false
       - key: AWS_ACCESS_KEY_ID
         sync: false
       - key: AWS_SECRET_ACCESS_KEY
@@ -26,13 +26,3 @@ services:
         sync: false
       - key: AWS_BUCKET_NAME
         sync: false
-
-  # Frontend Static Site
-  - type: static
-    name: task-manager-client
-    buildCommand: npm install && npm run build
-    staticPublishPath: build
-    rootDir: client
-    envVars:
-      - key: REACT_APP_API_URL
-        value: https://task-manager-api.onrender.com/api
